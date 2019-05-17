@@ -1,0 +1,394 @@
+{% extends 'base.html' %}
+<h1>Home Todo List</h1>
+
+{% block head %}
+    <title>Home</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href={% static 'todo_list/style_home.css' %}>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+{% endblock %}
+
+{% block body %}
+
+     <a class="logout-btn" href="logout.html">Logout</a>
+
+    <div id="myDIV" class="header">
+        <h2>My To Do List</h2>
+        <form id="add-task-form">
+            {% csrf_token %}
+            <input type="text" id="myInput" placeholder="Write a task...">
+            <button type="submit" class="addBtn" id="btn-add">ADD</button>
+        </form>
+    </div>
+
+    {% csrf_token %}
+    <ul id="myUL">
+        {% for todo in todo_list %}
+
+            {% if todo.todo_bool %}
+                <li id="{{ todo.id }}">{{ todo.task }}</li>
+            {%  else %}
+                <li id="{{ todo.id }}" class="checked">{{ todo.task }}</li>
+            {% endif %}
+
+        {% endfor %}
+    </ul>
+
+    <script>
+
+    var new_id;
+
+    // Create a new list item when clicking on the "Add" button
+    function newElement() {
+      var li = document.createElement("li");
+      console.log("new id is: " + new_id);
+      li.setAttribute("id", new_id);
+      var inputValue = document.getElementById("myInput").value;
+      var t = document.createTextNode(inputValue);
+      li.appendChild(t);
+      if (inputValue === '') {
+        alert("You must write something!");
+      } else {
+        document.getElementById("myUL").appendChild(li);
+      }
+      document.getElementById("myInput").value = "";
+
+      var span = document.createElement("SPAN");
+      var txt = document.createTextNode("\u00D7");
+      span.className = "close";
+      span.appendChild(txt);
+      li.appendChild(span);
+
+      var icon = document.createElement("a");
+      icon.setAttribute("class", "far fa-edit");
+      icon.style.float = "right";
+      icon.style.marginRight = "6vw";
+      li.appendChild(icon);
+
+    }
+
+    $(document).on('submit', '#add-task-form', function (e) {
+        e.preventDefault();
+        console.log('In add method');
+        $.ajax({
+            type: 'POST',
+            url: 'add',
+            data: {
+                task: $('#myInput').val(),
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function (data) {
+                new_id = data;
+                alert(data);
+                //alert("success add");
+                newElement();
+            }
+        })
+    });
+
+    // Add a "checked" symbol when clicking on a list item
+    var list = document.querySelector('ul');
+    list.addEventListener('click', function(ev) {
+
+      if (ev.target.tagName === 'LI') {
+          ev.preventDefault();
+          var id = ev.target.id;
+          console.log(id);
+          $.ajax({
+            url: 'toggle/' + id,
+            success: function () {
+                ev.target.classList.toggle('checked');
+            },
+            error: function(XMLHttpRequest, textStatus, errorThrown) {
+                        alert("Status: " + textStatus + "Error: " + errorThrown + "Please refresh the page");
+
+                    }
+        });
+      }
+    }, false);
+
+    // Create a "close" button and append it to each list item
+    var myNodelist = document.getElementsByTagName("LI");
+    for (var i = 0; i < myNodelist.length; i++) {
+      var span = document.createElement("SPAN");
+      var txt = document.createTextNode("\u00D7");
+      span.className = "close";
+      span.appendChild(txt);
+      myNodelist[i].appendChild(span);
+    }
+
+    // Click on a close button to hide the current list item
+    $(document).on('click', '.close', function (e) {
+
+        var id = e.target.parentNode.id;
+        console.log("click on close, parent id: " + id);
+        var div = this.parentElement;
+        div.style.display = "none";
+
+        $.ajax({
+            url: 'delete/' + id,
+            success: function () {
+                alert("deleted successfully!");
+            }
+
+        });
+    });
+
+
+    // Create an "edit" button and append it to each list item
+    for (var i = 0; i < myNodelist.length; i++) {
+        var icon = document.createElement("a");
+        icon.setAttribute("class", "far fa-edit");
+        icon.style.float = "right";
+        icon.style.marginRight = "6vw";
+        myNodelist[i].appendChild(icon);
+    }
+
+    //click on the edit icon to edit task
+    $(document).on('click', '.far.fa-edit', function (e) {
+
+        var id = e.target.parentNode.id;
+        console.log("In edit function, parent id: " + id);
+        var text = e.target.parentNode.textContent;
+        console.log(e.target.parentNode.textContent);
+        text = text.substring(0, text.length - 1);
+
+        //remove all the previous forms
+        var formsCollection = document.getElementsByTagName("form");
+        for(var i=1; i<formsCollection.length; i++) {
+            formsCollection[i].parentNode.removeChild(formsCollection[i]);
+        }
+
+        //get div element
+        var divForm = document.getElementById('myDIV');
+
+        //get old form
+        var form = document.getElementById("add-task-form");
+
+        //get add button
+        var buttonAdd = document.getElementById('btn-add');
+        //create new button
+        var btnSave = document.createElement("BUTTON");
+        btnSave.setAttribute("class", "addBtn");
+        btnSave.setAttribute("type", "");
+        btnSave.textContent = "Save changes";
+
+        //create new form
+        var newForm = document.createElement("form");
+        newForm.setAttribute("id", "new-form");
+
+
+        //get input field
+        var inputField = document.getElementById("myInput");
+
+        //create input field
+        var newInput = document.createElement("input");
+        newInput.setAttribute("id", "new-input");
+        newInput.setAttribute("type", "text");
+        newInput.value = text;
+
+        newForm.appendChild(newInput);
+        newForm.appendChild(btnSave);
+
+        //append new form
+        divForm.appendChild(newForm);
+        newForm.style.marginTop = "16px";
+        newInput.focus();
+
+        var data_todo_id;
+        var data_task;
+
+        btnSave.onclick = function (ev) {
+            ev.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: 'edit/' + id,
+                data: {
+                    task: $('#new-input').val(),
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (data) {
+
+                    data_todo_id = data.todo_id;
+                    data_task = data.task;
+                    alert(data.todo_id + " " + data.task);
+
+                    var li_item = document.getElementById(data_todo_id);
+                    li_item.innerText = data_task;
+                    //create close button
+                    var span = document.createElement("SPAN");
+                    var txt = document.createTextNode("\u00D7");
+                    span.className = "close";
+                    span.appendChild(txt);
+                    li_item.appendChild(span);
+                    //create edit icon
+                    var icon = document.createElement("a");
+                    icon.setAttribute("class", "far fa-edit");
+                    icon.style.float = "right";
+                    icon.style.marginRight = "6vw";
+                    li_item.appendChild(icon);
+
+
+                    newForm.parentNode.removeChild(newForm);
+
+{#                    form.appendChild(inputField);#}
+{#                    form.appendChild(buttonAdd);#}
+
+                    //append old form
+                    //divForm.appendChild(form);
+
+                }
+
+            });
+
+        };
+
+    });
+
+
+
+    // Click on the icon to edit task
+{#    var edit_icon = document.getElementsByClassName("far fa-edit");#}
+{#    for (var i = 0; i < close.length; i++) {#}
+{##}
+{#        (function(index) {#}
+{#            edit_icon[index].onclick = function(ev) {#}
+{#                ev.preventDefault();#}
+{#                console.log(index);#}
+{##}
+{#                var id = ev.target.parentNode.id;#}
+{#                console.log(id);#}
+{#                var text = ev.target.parentNode.textContent;#}
+{#                console.log(ev.target.parentNode.textContent);#}
+{#                text = text.substring(0, text.length - 1);#}
+{##}
+{#                //get div element#}
+{#                var divForm = document.getElementById('myDIV');#}
+{##}
+{#                var buttonAdd = document.getElementById('btn-add');#}
+{#                buttonAdd.setAttribute("type", "");#}
+{#                buttonAdd.textContent = "Save changes";#}
+{#                buttonAdd.style.display = "none";#}
+{##}
+{#                //create new form#}
+{#                var newForm = document.createElement("form");#}
+{#                newForm.setAttribute("id", "new-form");#}
+{##}
+{#                //get input field#}
+{#                var inputField = document.getElementById("myInput");#}
+{#                inputField.value = text;#}
+{##}
+{#                //create button#}
+{#                var btnSave = document.createElement("BUTTON");#}
+{#                btnSave.textContent = "Save changes";#}
+{#                btnSave.setAttribute("class", "addBtn");#}
+{##}
+{#                newForm.appendChild(inputField);#}
+{#                newForm.appendChild(buttonAdd);#}
+{##}
+{#                //append new form#}
+{#                divForm.appendChild(newForm);#}
+{#                inputField.focus();#}
+{##}
+{##}
+{#                var forms = divForm.getElementsByTagName("form");#}
+{#                for(var j = 0; j < forms.length; j++) {#}
+{#                    forms[i].parentNode.removeChild(forms[i]);#}
+{#                }#}
+{##}
+{#                //remove old form#}
+{#                var form = document.getElementById('add-task-form');#}
+{#                if(divForm.contains(form)) {#}
+{#                    form.parentNode.removeChild(form);#}
+{#                }#}
+{##}
+{#                //create new input field#}
+{#                var inputField = document.createElement("input");#}
+{#                inputField.setAttribute("type", "text");#}
+{#                inputField.setAttribute("value", text);#}
+{##}
+{#                newForm.appendChild(inputField);#}
+{##}
+{##}
+{#                var buttonAdd = document.getElementById('btn-add');#}
+{#                buttonAdd.style.display = "none";#}
+{#                var form = document.getElementById('add-task-form');#}
+{##}
+{#                var divForm = document.getElementById('myDIV');#}
+{#                console.log("child 3" + divForm.childNodes[3]);#}
+{#                divForm.removeChild(divForm.childNodes[3]);#}
+{#                form.style.display = "none";#}
+{##}
+{#                var newForm = document.createElement("form");#}
+{#                newForm.setAttribute("id", "new-form");#}
+{#                var btnSave = document.createElement("BUTTON");#}
+{#                btnSave.textContent = "Save changes";#}
+{#                btnSave.setAttribute("class", "addBtn");#}
+{#                var inputField = document.createElement("INPUT");#}
+{#                inputField.setAttribute("type", "text");#}
+{#                inputField.setAttribute("placeholder", "Title...");#}
+{##}
+{#                newForm.appendChild(inputField);#}
+{#                newForm.appendChild(btnSave);#}
+{##}
+{#                console.log("new form" + newForm);#}
+{#                console.log(newForm.childNodes[0]);#}
+{#                console.log(newForm.childNodes[1]);#}
+{##}
+{#                form.appendChild(inputField);#}
+{#                form.appendChild(buttonAdd);#}
+{##}
+{#                console.log(divForm.childNodes[2].textContent);#}
+{#                divForm.appendChild(newForm);#}
+{##}
+{#                divForm.replaceChild(newForm, divForm.childNodes[2]);#}
+{#                inputField.value = text;#}
+{#                inputField.focus();#}
+{##}
+{#                buttonAdd.onclick = function (e) {#}
+{#                    e.preventDefault();#}
+{#                    $.ajax({#}
+{#                    type: 'POST',#}
+{#                    url: 'edit/' + id,#}
+{#                    data: {#}
+{#                        task: $('#myInput').val(),#}
+{#                        csrfmiddlewaretoken: '{{ csrf_token }}'#}
+{#                    },#}
+{#                    success: function () {#}
+{#                        alert("task edited successfully!");#}
+{#                        console.log(inputField.value);#}
+{#                        document.getElementById(id).innerText = inputField.value;#}
+{#                        //ev.target.parentNode.textContent = inputField.value;#}
+{##}
+{#                        console.log(divForm.childNodes[2]);#}
+{#                        divForm.replaceChild(form, divForm.childNodes[2]);#}
+{#                        inputField.style.display = "block";#}
+{#                        buttonAdd.style.display = "block";#}
+{#                        inputField.value = "";#}
+{#                        inputField.setAttribute("placeholder", "Title...");#}
+{#                        buttonAdd.setAttribute("type", "submit");#}
+{#                        buttonAdd.setAttribute("class", "addBtn");#}
+{#                        console.log(form);#}
+{##}
+{#                    }#}
+{#                });#}
+{#                };#}
+{##}
+{#            }#}
+{#        })(i);#}
+{#    }#}
+
+
+{#    // Add a "checked" symbol when clicking on a list item#}
+{#    var list = document.querySelector('ul');#}
+{#    list.addEventListener('click', function(ev) {#}
+{#        ev.preventDefault();#}
+{##}
+{#      if (ev.target.tagName === 'LI') {#}
+{#        ev.target.classList.toggle('checked');#}
+{#      }#}
+{#    }, false);#}
+    </script>
+
+{% endblock %}

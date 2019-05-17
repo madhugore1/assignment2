@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    <title>Register</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href={% static 'todo_list/style_register.css' %}>
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="inner-div">
+            <h1 class="h1">Register</h1>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div class="div-button">
+                    <button type="submit" class="btn btn-primary">Register</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
