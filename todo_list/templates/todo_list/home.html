@@ -80,7 +80,7 @@
             },
             success: function (data) {
                 new_id = data;
-                alert(data);
+{#                alert(data);#}
                 //alert("success add");
                 newElement();
             }
@@ -129,10 +129,19 @@
         $.ajax({
             url: 'delete/' + id,
             success: function () {
-                alert("deleted successfully!");
+{#                alert("deleted successfully!");#}
             }
 
         });
+
+        //remove all the previous forms
+        var formsCollection = document.getElementsByTagName("form");
+        if(formsCollection.length > 1) {
+            for(var i=1; i<formsCollection.length; i++) {
+                formsCollection[i].parentNode.removeChild(formsCollection[i]);
+            }
+        }
+
     });
 
 
@@ -201,194 +210,52 @@
 
         btnSave.onclick = function (ev) {
             ev.preventDefault();
-            $.ajax({
-                type: 'POST',
-                url: 'edit/' + id,
-                data: {
-                    task: $('#new-input').val(),
-                    csrfmiddlewaretoken: '{{ csrf_token }}'
-                },
-                success: function (data) {
+            if(newInput.value === '') {
+                alert("You must write something!");
+            } else {
 
-                    data_todo_id = data.todo_id;
-                    data_task = data.task;
-                    alert(data.todo_id + " " + data.task);
+                $.ajax({
+                    type: 'POST',
+                    url: 'edit/' + id,
+                    data: {
+                        task: $('#new-input').val(),
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function (data) {
 
-                    var li_item = document.getElementById(data_todo_id);
-                    li_item.innerText = data_task;
-                    //create close button
-                    var span = document.createElement("SPAN");
-                    var txt = document.createTextNode("\u00D7");
-                    span.className = "close";
-                    span.appendChild(txt);
-                    li_item.appendChild(span);
-                    //create edit icon
-                    var icon = document.createElement("a");
-                    icon.setAttribute("class", "far fa-edit");
-                    icon.style.float = "right";
-                    icon.style.marginRight = "6vw";
-                    li_item.appendChild(icon);
+                        data_todo_id = data.todo_id;
+                        data_task = data.task;
+{#                        alert(data.todo_id + " " + data.task);#}
+
+                        var li_item = document.getElementById(data_todo_id);
+                        li_item.innerText = data_task;
+                        //create close button
+                        var span = document.createElement("SPAN");
+                        var txt = document.createTextNode("\u00D7");
+                        span.className = "close";
+                        span.appendChild(txt);
+                        li_item.appendChild(span);
+                        //create edit icon
+                        var icon = document.createElement("a");
+                        icon.setAttribute("class", "far fa-edit");
+                        icon.style.float = "right";
+                        icon.style.marginRight = "6vw";
+                        li_item.appendChild(icon);
 
 
-                    newForm.parentNode.removeChild(newForm);
+                        newForm.parentNode.removeChild(newForm);
 
-{#                    form.appendChild(inputField);#}
-{#                    form.appendChild(buttonAdd);#}
 
-                    //append old form
-                    //divForm.appendChild(form);
+                    }
 
-                }
+                });
+            }
 
-            });
 
         };
 
     });
 
-
-
-    // Click on the icon to edit task
-{#    var edit_icon = document.getElementsByClassName("far fa-edit");#}
-{#    for (var i = 0; i < close.length; i++) {#}
-{##}
-{#        (function(index) {#}
-{#            edit_icon[index].onclick = function(ev) {#}
-{#                ev.preventDefault();#}
-{#                console.log(index);#}
-{##}
-{#                var id = ev.target.parentNode.id;#}
-{#                console.log(id);#}
-{#                var text = ev.target.parentNode.textContent;#}
-{#                console.log(ev.target.parentNode.textContent);#}
-{#                text = text.substring(0, text.length - 1);#}
-{##}
-{#                //get div element#}
-{#                var divForm = document.getElementById('myDIV');#}
-{##}
-{#                var buttonAdd = document.getElementById('btn-add');#}
-{#                buttonAdd.setAttribute("type", "");#}
-{#                buttonAdd.textContent = "Save changes";#}
-{#                buttonAdd.style.display = "none";#}
-{##}
-{#                //create new form#}
-{#                var newForm = document.createElement("form");#}
-{#                newForm.setAttribute("id", "new-form");#}
-{##}
-{#                //get input field#}
-{#                var inputField = document.getElementById("myInput");#}
-{#                inputField.value = text;#}
-{##}
-{#                //create button#}
-{#                var btnSave = document.createElement("BUTTON");#}
-{#                btnSave.textContent = "Save changes";#}
-{#                btnSave.setAttribute("class", "addBtn");#}
-{##}
-{#                newForm.appendChild(inputField);#}
-{#                newForm.appendChild(buttonAdd);#}
-{##}
-{#                //append new form#}
-{#                divForm.appendChild(newForm);#}
-{#                inputField.focus();#}
-{##}
-{##}
-{#                var forms = divForm.getElementsByTagName("form");#}
-{#                for(var j = 0; j < forms.length; j++) {#}
-{#                    forms[i].parentNode.removeChild(forms[i]);#}
-{#                }#}
-{##}
-{#                //remove old form#}
-{#                var form = document.getElementById('add-task-form');#}
-{#                if(divForm.contains(form)) {#}
-{#                    form.parentNode.removeChild(form);#}
-{#                }#}
-{##}
-{#                //create new input field#}
-{#                var inputField = document.createElement("input");#}
-{#                inputField.setAttribute("type", "text");#}
-{#                inputField.setAttribute("value", text);#}
-{##}
-{#                newForm.appendChild(inputField);#}
-{##}
-{##}
-{#                var buttonAdd = document.getElementById('btn-add');#}
-{#                buttonAdd.style.display = "none";#}
-{#                var form = document.getElementById('add-task-form');#}
-{##}
-{#                var divForm = document.getElementById('myDIV');#}
-{#                console.log("child 3" + divForm.childNodes[3]);#}
-{#                divForm.removeChild(divForm.childNodes[3]);#}
-{#                form.style.display = "none";#}
-{##}
-{#                var newForm = document.createElement("form");#}
-{#                newForm.setAttribute("id", "new-form");#}
-{#                var btnSave = document.createElement("BUTTON");#}
-{#                btnSave.textContent = "Save changes";#}
-{#                btnSave.setAttribute("class", "addBtn");#}
-{#                var inputField = document.createElement("INPUT");#}
-{#                inputField.setAttribute("type", "text");#}
-{#                inputField.setAttribute("placeholder", "Title...");#}
-{##}
-{#                newForm.appendChild(inputField);#}
-{#                newForm.appendChild(btnSave);#}
-{##}
-{#                console.log("new form" + newForm);#}
-{#                console.log(newForm.childNodes[0]);#}
-{#                console.log(newForm.childNodes[1]);#}
-{##}
-{#                form.appendChild(inputField);#}
-{#                form.appendChild(buttonAdd);#}
-{##}
-{#                console.log(divForm.childNodes[2].textContent);#}
-{#                divForm.appendChild(newForm);#}
-{##}
-{#                divForm.replaceChild(newForm, divForm.childNodes[2]);#}
-{#                inputField.value = text;#}
-{#                inputField.focus();#}
-{##}
-{#                buttonAdd.onclick = function (e) {#}
-{#                    e.preventDefault();#}
-{#                    $.ajax({#}
-{#                    type: 'POST',#}
-{#                    url: 'edit/' + id,#}
-{#                    data: {#}
-{#                        task: $('#myInput').val(),#}
-{#                        csrfmiddlewaretoken: '{{ csrf_token }}'#}
-{#                    },#}
-{#                    success: function () {#}
-{#                        alert("task edited successfully!");#}
-{#                        console.log(inputField.value);#}
-{#                        document.getElementById(id).innerText = inputField.value;#}
-{#                        //ev.target.parentNode.textContent = inputField.value;#}
-{##}
-{#                        console.log(divForm.childNodes[2]);#}
-{#                        divForm.replaceChild(form, divForm.childNodes[2]);#}
-{#                        inputField.style.display = "block";#}
-{#                        buttonAdd.style.display = "block";#}
-{#                        inputField.value = "";#}
-{#                        inputField.setAttribute("placeholder", "Title...");#}
-{#                        buttonAdd.setAttribute("type", "submit");#}
-{#                        buttonAdd.setAttribute("class", "addBtn");#}
-{#                        console.log(form);#}
-{##}
-{#                    }#}
-{#                });#}
-{#                };#}
-{##}
-{#            }#}
-{#        })(i);#}
-{#    }#}
-
-
-{#    // Add a "checked" symbol when clicking on a list item#}
-{#    var list = document.querySelector('ul');#}
-{#    list.addEventListener('click', function(ev) {#}
-{#        ev.preventDefault();#}
-{##}
-{#      if (ev.target.tagName === 'LI') {#}
-{#        ev.target.classList.toggle('checked');#}
-{#      }#}
-{#    }, false);#}
     </script>
 
 {% endblock %}
